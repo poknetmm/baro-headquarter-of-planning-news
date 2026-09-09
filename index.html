@@ -203,8 +203,8 @@ window.__drawCharts = function(){
     var sub = b ? kdate(b.brief_date) + " · " + esc(ed.edited_at || "") + " 편집" + (ed.basis ? " · 기준: " + esc(ed.basis) : "") : "";
     var nav1 = b ? '<a href="?date=' + (nav.prev || "") + '" class="' + (nav.prev ? "" : "dis") + '">‹ ' + (nav.prev ? sdate(nav.prev) : "이전") + '</a><span class="cur">' + sdate(b.brief_date) + '</span><a href="?date=' + (nav.next || "") + '" class="' + (nav.next ? "" : "dis") + '">' + (nav.next ? sdate(nav.next) : "다음") + " ›</a>" : "";
     var actions = [
-      b && b.body && b.body.report_url ? '<a href="' + esc(b.body.report_url) + '" target="_blank" rel="noopener">보고서(Word) 내려받기</a>' : "",
-      CFG.contactEmail ? '<a href="mailto:' + esc(CFG.contactEmail) + "?subject=" + encodeURIComponent("[증시 브리핑] 메일 구독 신청") + '" class="primary">메일로 받아보기</a>' : ""
+      b && b.body && b.body.pdf_url ? '<a href="' + esc(b.body.pdf_url) + '" target="_blank" rel="noopener" class="primary">PDF 보기</a>' : "",
+      b && b.body && b.body.report_url ? '<a href="' + esc(b.body.report_url) + '" target="_blank" rel="noopener">Word 내려받기</a>' : ""
     ].join("");
     return '<header class="masthead"><div class="brand"><div class="kicker">Daily Market Brief</div><h1>' + CFG.mastheadHtml + '</h1><div class="sub">' + sub + "</div></div>" +
       '<div class="tools"><nav class="datenav" aria-label="날짜 이동">' + nav1 + '<a href="' + (archive ? "?" : "?view=archive") + '">' + (archive ? "최신 브리핑" : "아카이브") + '</a></nav><div class="actions">' + actions + "</div></div></header>";
