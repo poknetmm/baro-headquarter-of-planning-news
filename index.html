@@ -415,7 +415,6 @@ a.card2:hover{text-decoration:none;border-color:var(--rule-strong);box-shadow:va
 /* 오피니언 카드 */
 .ogrid{display:grid;grid-template-columns:repeat(var(--ocols,3),minmax(0,1fr));gap:14px}
 .ocard .oh{display:flex;align-items:center;gap:10px;padding:12px 18px;border-bottom:1px solid var(--rule);background:var(--surface-2)}
-.ocard .oh .area{font-size:12.5px;font-weight:700;color:var(--accent)}
 .ocard .oh .kind{margin-left:auto;font-size:12px;font-weight:700;padding:2px 8px;border-radius:4px;background:var(--brand-sky-soft);color:var(--ink)}
 .ocard .oh .kind.sum{background:var(--neutral-soft);color:var(--muted)}
 .ocard .ob{padding:16px 20px 18px}
@@ -768,7 +767,8 @@ window.__drawCharts = function(){
   }
 
   // ---------- 오피니언 ----------
-  var OP_AREA = { biz: { label: "대부업 영업환경 · 기회와 위기", icon: "loan" }, ai: { label: "AI · AX · 기회와 위기", icon: "ai" }, security: { label: "보안 · 트렌드", icon: "security" } };
+  // area는 내부 구분 코드 — 아이콘만 고르고 분야 이름은 표시하지 않는다(2026-10-01 대표 결정)
+  var OP_ICON = { biz: "loan", ai: "ai", security: "security" };
   // body.opinion: [{area: biz|ai|security, kind: 논설|요약, title, paras[], basis[]}]. 오피니언 도입 전 호는 1면 데스크 칼럼을 1편으로 보여 준다(지면 코멘트는 표시하지 않음)
   function opinionList(B) {
     if (B.opinion && B.opinion.length) return B.opinion;
@@ -777,10 +777,9 @@ window.__drawCharts = function(){
   }
   function opinionSec(ops) {
     if (!ops.length) return "";
-    return '<section id="opinion" class="blk" aria-label="오피니언"><div class="hd"><h2>오피니언</h2><span>기획본부 논설 · 대부업 영업환경 / AI·AX / 보안</span></div>' +
+    return '<section id="opinion" class="blk" aria-label="오피니언"><div class="hd"><h2>오피니언</h2><span>기획본부 논설</span></div>' +
       '<div class="ogrid" style="--ocols:' + Math.min(3, ops.length) + '">' + ops.map(function (o) {
-        var a = OP_AREA[o.area] || { label: o.area, icon: "market" };
-        return '<article class="card2 ocard"><div class="oh">' + art(a.icon, { size: "chip", seed: o.title }) + '<span class="area">' + esc(a.label) + '</span><span class="kind' + (o.kind === "요약" ? " sum" : "") + '">' + (o.kind === "요약" ? "오늘의 요약" : "논설") + "</span></div>" +
+        return '<article class="card2 ocard"><div class="oh">' + art(OP_ICON[o.area] || "market", { size: "chip", seed: o.title }) + '<span class="kind' + (o.kind === "요약" ? " sum" : "") + '">' + (o.kind === "요약" ? "오늘의 요약" : "논설") + "</span></div>" +
           '<div class="ob"><h3>' + esc(o.title) + "</h3>" + (o.paras || []).map(function (p) { return "<p>" + rich(p) + "</p>"; }).join("") +
           (o.basis && o.basis.length ? '<div class="basis">근거: ' + esc(o.basis.join(" · ")) + "</div>" : "") + "</div></article>";
       }).join("") + "</div>" +
