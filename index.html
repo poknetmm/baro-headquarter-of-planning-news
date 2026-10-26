@@ -546,6 +546,10 @@ html.v3{font-size:calc(16px * var(--scale))}
 .v3-arts .v3-pg{font-weight:700;color:var(--accent)}
 .v3-arts ul{margin:4px 0 0;padding-left:1.2em}
 .v3-arts li{padding:2px 0}
+.v3-arts-src{grid-column:1/-1}
+.v3-arts-src .v3-lh{font-size:1.125rem;margin:12px 0 4px}
+.v3-arts .v3-srclist{padding-left:0}
+.v3-arts .v3-srclist li{padding:8px 0}
 .v3-listnote{font-size:1rem;color:var(--ink-2);margin:16px 0 0}
 /* 금융당국 자료 탭(시장동향·보도자료·신문스크랩) — 자료 목록 + 아래 PDF 쪽 보기 */
 .v3-docmsg{padding:28px 0;color:var(--ink-2);font-size:1.0625rem}
@@ -667,7 +671,7 @@ html.v3{font-size:calc(16px * var(--scale))}
   .v3-stripe,.v3-marq,.v3-tabs,.v3-size,.v3-dateline .v3-tools{display:none}
   .v3-page{box-shadow:none;max-width:none}
   #v3-t-news{display:block !important}
-  #v3-t-list,#v3-t-src,#v3-t-arch,#v3-t-mkt,#v3-t-press,#v3-t-scrap{display:none !important}
+  #v3-t-src,#v3-t-arch,#v3-t-mkt,#v3-t-press,#v3-t-scrap{display:none !important}
   .v3-root{print-color-adjust:exact;-webkit-print-color-adjust:exact}
   @page{size:A4}
 }
@@ -1202,31 +1206,13 @@ window.__drawCharts = function(){
     }).join("");
     return '<section class="v3-editorial"><div class="v3-head">' + v3Icon("pen") + "사설</div><div class=\"v3-eds\">" + arts + "</div></section>";
   }
-  function v3ListTab(F, secs) {
-    var total = v3CountArticles(F, secs);
-    var out = '<p class="v3-listnote">이번 호에 실린 기사 ' + total + "건입니다. 제목을 누르면 그 기사로 이동합니다.</p>";
-    if (F.story) {
-      out += '<h3 class="v3-lh"><span class="v3-pg">1면</span> 머리기사 <small>1건</small></h3><ul class="v3-artlist"><li>' +
-        '<a href="#v3-a-front" data-jump="v3-a-front">' + esc((F.story.title || "").replace(/\n/g, " ")) + "</a>" +
-        "<p>" + esc((F.story.paras || [])[0] || "") + '</p><span class="v3-m">' + (F.story.sources || []).map(function (x) { return esc(x.media); }).join(" · ") + "</span></li></ul>";
-    }
-    secs.forEach(function (s) {
-      if (s.empty) return;
-      var L = s.lead || {}, subs = s.subs || [];
-      out += '<h3 class="v3-lh"><span class="v3-pg">' + esc(s.no) + "면</span> " + esc(s.name) + " <small>" + (1 + subs.length) + "건</small></h3><ul class=\"v3-artlist\">";
-      out += '<li><a href="#v3-a-' + esc(s.key) + '_lead" data-jump="v3-a-' + esc(s.key) + '_lead">' + esc(L.title || "") + '</a><span class="v3-tag">리드</span><p>' + esc((L.paras || [])[0] || "") + '</p><span class="v3-m">' + (L.sources || []).map(function (x) { return esc(x.media); }).join(" · ") + "</span></li>";
-      subs.forEach(function (x, i) {
-        var tgt = "v3-a-" + s.key + "_s" + (i + 1);
-        out += '<li><a href="#' + esc(tgt) + '" data-jump="' + esc(tgt) + '">' + esc(x.title) + '</a><p>' + esc((x.paras || [])[0] || "") + '</p><span class="v3-m">' + (x.sources || []).map(function (m) { return esc(m.media); }).join(" · ") + "</span></li>";
-      });
-      out += "</ul>";
-    });
-    return out;
-  }
   function v3SrcTab(B) {
-    var list = B.sources || [], byPage = {};
+    var list = B.sources || [];
+    return '<p class="v3-listnote">이번 호 기사의 근거가 된 원문 기사 ' + list.length + "건입니다. 제목을 누르면 원문이 새 창으로 열립니다.</p>" + v3SrcGroupsHtml(list);
+  }
+  function v3SrcGroupsHtml(list) {
+    var byPage = {}, out = "";
     list.forEach(function (s) { var p = s.page || "기타"; (byPage[p] = byPage[p] || []).push(s); });
-    var out = '<p class="v3-listnote">이번 호 기사의 근거가 된 원문 기사 ' + list.length + "건입니다. 제목을 누르면 원문이 새 창으로 열립니다.</p>";
     Object.keys(byPage).sort().forEach(function (p) {
       var items = byPage[p];
       out += '<h3 class="v3-lh"><span class="v3-pg">' + esc(p) + "</span> <small>" + items.length + "건</small></h3><ul class=\"v3-srclist\">" +
@@ -1240,7 +1226,15 @@ window.__drawCharts = function(){
       return n + (s.empty ? 0 : (s.lead && s.lead.title ? 1 : 0) + (s.subs || []).length);
     }, 0);
   }
+  // 지난 기사목록: 그 호의 원문 기사 목록(sources)을 기사목록 탭과 같은 꼴로 보여 준다. sources가 없는 옛 호만 기사 제목으로 대신한다
+  function v3ArchCount(AB) {
+    return (AB.sources && AB.sources.length) || v3CountArticles(AB.front, AB.sections);
+  }
+  function v3ArchHas(AB) {
+    return (AB.sources && AB.sources.length) || (AB.sections && AB.sections.length);
+  }
   function v3ArchGroupsHtml(AB) {
+    if (AB.sources && AB.sources.length) return '<div class="v3-arts-src">' + v3SrcGroupsHtml(AB.sources) + "</div>";
     return (AB.sections || []).filter(function (s) { return !s.empty; }).map(function (s) {
       var titles = [];
       if (s.lead && s.lead.title) titles.push(s.lead.title);
@@ -1259,14 +1253,14 @@ window.__drawCharts = function(){
     var AB = curBrief.body || {};
     var pdfUrl = safeUrl(AB.pdf_url);
     var pdf = pdfUrl ? '<a class="v3-pdf" href="' + esc(pdfUrl) + '" target="_blank" rel="noopener">PDF</a>' : '<span class="v3-pdf v3-off">PDF 없음</span>';
-    if (!(AB.sections && AB.sections.length)) {
+    if (!v3ArchHas(AB)) {
       return '<div class="v3-issue"><div class="v3-sum"><span class="v3-d">' + sdate(a.brief_date) + '</span><span class="v3-h">' + titleTxt + '</span><span class="v3-c">1면만</span></div>' + pdf + "</div>";
     }
-    var count = v3CountArticles(AB.front, AB.sections);
+    var count = v3ArchCount(AB);
     return '<div class="v3-issue"><details data-date="' + esc(a.brief_date) + '" data-loaded="1"><summary><span class="v3-d">' + sdate(a.brief_date) + '</span><span class="v3-h">' + titleTxt + '</span><span class="v3-c">기사 ' + count + '건</span></summary><div class="v3-arts">' + v3ArchGroupsHtml(AB) + "</div></details>" + pdf + "</div>";
   }
   function v3ArchiveTab(archList, b) {
-    var out = '<p class="v3-listnote">지금까지 게시된 ' + archList.length + "호를 최신순으로 보여 줍니다. 줄을 누르면 그 호의 기사 제목을 불러옵니다.</p>";
+    var out = '<p class="v3-listnote">지금까지 게시된 ' + archList.length + "호를 최신순으로 보여 줍니다. 줄을 누르면 그 호의 기사목록을 불러옵니다.</p>";
     out += archList.map(function (a) { return v3IssueRow(a, b); }).join("");
     return out;
   }
@@ -1283,8 +1277,8 @@ window.__drawCharts = function(){
     var row = d.closest(".v3-issue");
     var slot = row && row.querySelector(".v3-pdf-slot");
     function fill(AB) {
-      var hasSections = AB.sections && AB.sections.length;
-      if (summaryC) summaryC.textContent = hasSections ? "기사 " + v3CountArticles(AB.front, AB.sections) + "건" : "1면만";
+      var hasSections = v3ArchHas(AB);
+      if (summaryC) summaryC.textContent = hasSections ? "기사 " + v3ArchCount(AB) + "건" : "1면만";
       if (arts) arts.innerHTML = hasSections ? v3ArchGroupsHtml(AB) : '<p style="padding:8px 0;color:var(--ink-2)">1면만 게시된 호입니다.</p>';
       if (slot) {
         var pdfUrl = safeUrl(AB.pdf_url);
@@ -1316,16 +1310,17 @@ window.__drawCharts = function(){
     var nextHtml = nav.next ? '<a href="?date=' + esc(nav.next) + '">' + sdate(nav.next) + " ›</a>" : '<span class="v3-dis">다음 ›</span>';
     var navHtml = prevHtml + '<span class="v3-cur">' + sdate(b.brief_date) + "</span>" + nextHtml;
     return '<div class="v3-dateline"><span><b>' + esc(kdate(b.brief_date)) + "</b> · " + esc(ed.basis || "") + (ed.next_edition ? " · 다음 호 " + esc(ed.next_edition) : "") + '</span><nav class="v3-tools" aria-label="날짜 이동">' + navHtml +
-      '<button type="button" onclick="v3GoArchive()">지난 호</button>' +
+      '<button type="button" onclick="v3GoArchive()">지난 기사목록</button>' +
       '<button type="button" class="v3-pdf" onclick="window.print()">PDF로 저장</button></nav></div>';
   }
   window.v3GoArchive = function () { window.v3ShowTab(document.querySelector('.v3-tabs button[data-panel="v3-t-arch"]')); };
   function v3TabButtons(secs, archN) {
-    var tabs = [["v3-t-news", "오늘 신문", null], ["v3-t-list", "전체 기사 목록", null], ["v3-t-src", "출처", null],
-      ["v3-t-mkt", "금융당국 시장동향", null], ["v3-t-press", "금융당국 보도자료", null], ["v3-t-scrap", "금융당국 신문스크랩", null],
-      ["v3-t-arch", "지난 호", archN + "호"]];
-    return '<div class="v3-tabs" role="tablist">' + tabs.map(function (t, i) {
-      return '<button type="button" role="tab" data-panel="' + t[0] + '" aria-selected="' + (i === 0 ? "true" : "false") + '" onclick="v3ShowTab(this)">' + t[1] + (t[2] ? "<small>" + esc(t[2]) + "</small>" : "") + "</button>";
+    // 탭 순서는 2026-10-27 대표 지시. 맨 왼쪽은 기사목록이지만 처음 열리는 탭은 기사요약(신문 지면)이다
+    var tabs = [["v3-t-src", "기사목록", null], ["v3-t-news", "기사요약", null],
+      ["v3-t-press", "금융당국 보도자료", null], ["v3-t-scrap", "금융당국 신문스크랩", null], ["v3-t-mkt", "금융당국 시장동향", null],
+      ["v3-t-arch", "지난 기사목록", archN + "호"]];
+    return '<div class="v3-tabs" role="tablist">' + tabs.map(function (t) {
+      return '<button type="button" role="tab" data-panel="' + t[0] + '" aria-selected="' + (t[0] === "v3-t-news" ? "true" : "false") + '" onclick="v3ShowTab(this)">' + t[1] + (t[2] ? "<small>" + esc(t[2]) + "</small>" : "") + "</button>";
     }).join("") + "</div>";
   }
   window.v3ShowTab = function (btn) {
@@ -1612,11 +1607,10 @@ window.__drawCharts = function(){
     window.__Q = q; window.__B = {};
     document.title = SITE_NAME + " · " + sdate(b.brief_date);
     var news = '<div class="v3-panel" id="v3-t-news" role="tabpanel">' + v3IndexNav(secs) + v3Front(b, F, secs) + secs.map(v3Paper).join("") + v3Editorial(ops) + "</div>";
-    var listTab = '<div class="v3-panel" id="v3-t-list" role="tabpanel" hidden>' + v3ListTab(F, secs) + "</div>";
     var srcTab = '<div class="v3-panel" id="v3-t-src" role="tabpanel" hidden>' + v3SrcTab(B) + "</div>";
     var archTab = '<div class="v3-panel" id="v3-t-arch" role="tabpanel" hidden>' + v3ArchiveTab(archList, b) + "</div>";
     var foot = '<footer class="v3-foot"><span>기획본부 뉴스 · 사내 참고용이며 회사 공식 의견이 아닙니다.</span><span>편집 ' + esc(ed.edited_at || "") + "</span></footer>";
-    return '<div class="v3-root">' + v3Symbols() + '<div class="v3-page"><div class="v3-stripe"></div>' + v3Mast(b, nav) + v3Dateline(b, nav, ed) + v3Marquee(secs) + v3TabButtons(secs, archList.length) + news + listTab + srcTab + v3DocPanels() + archTab + foot + "</div></div>";
+    return '<div class="v3-root">' + v3Symbols() + '<div class="v3-page"><div class="v3-stripe"></div>' + v3Mast(b, nav) + v3Dateline(b, nav, ed) + v3Marquee(secs) + v3TabButtons(secs, archList.length) + news + srcTab + v3DocPanels() + archTab + foot + "</div></div>";
   }
 
   // ---------- boot ----------
