@@ -1315,12 +1315,12 @@ window.__drawCharts = function(){
   }
   window.v3GoArchive = function () { window.v3ShowTab(document.querySelector('.v3-tabs button[data-panel="v3-t-arch"]')); };
   function v3TabButtons(secs, archN) {
-    // 탭 순서는 2026-10-27 대표 지시. 맨 왼쪽은 기사목록이지만 처음 열리는 탭은 기사요약(신문 지면)이다
+    // 탭 순서는 2026-10-27 대표 지시. 처음 열리는 탭도 맨 왼쪽 기사목록이다
     var tabs = [["v3-t-src", "기사목록", null], ["v3-t-news", "기사요약", null],
       ["v3-t-press", "금융당국 보도자료", null], ["v3-t-scrap", "금융당국 신문스크랩", null], ["v3-t-mkt", "금융당국 시장동향", null],
       ["v3-t-arch", "지난 기사목록", archN + "호"]];
     return '<div class="v3-tabs" role="tablist">' + tabs.map(function (t) {
-      return '<button type="button" role="tab" data-panel="' + t[0] + '" aria-selected="' + (t[0] === "v3-t-news" ? "true" : "false") + '" onclick="v3ShowTab(this)">' + t[1] + (t[2] ? "<small>" + esc(t[2]) + "</small>" : "") + "</button>";
+      return '<button type="button" role="tab" data-panel="' + t[0] + '" aria-selected="' + (t[0] === "v3-t-src" ? "true" : "false") + '" onclick="v3ShowTab(this)">' + t[1] + (t[2] ? "<small>" + esc(t[2]) + "</small>" : "") + "</button>";
     }).join("") + "</div>";
   }
   window.v3ShowTab = function (btn) {
@@ -1606,8 +1606,8 @@ window.__drawCharts = function(){
     var ops = opinionList(B);
     window.__Q = q; window.__B = {};
     document.title = SITE_NAME + " · " + sdate(b.brief_date);
-    var news = '<div class="v3-panel" id="v3-t-news" role="tabpanel">' + v3IndexNav(secs) + v3Front(b, F, secs) + secs.map(v3Paper).join("") + v3Editorial(ops) + "</div>";
-    var srcTab = '<div class="v3-panel" id="v3-t-src" role="tabpanel" hidden>' + v3SrcTab(B) + "</div>";
+    var news = '<div class="v3-panel" id="v3-t-news" role="tabpanel" hidden>' + v3IndexNav(secs) + v3Front(b, F, secs) + secs.map(v3Paper).join("") + v3Editorial(ops) + "</div>";
+    var srcTab = '<div class="v3-panel" id="v3-t-src" role="tabpanel">' + v3SrcTab(B) + "</div>";
     var archTab = '<div class="v3-panel" id="v3-t-arch" role="tabpanel" hidden>' + v3ArchiveTab(archList, b) + "</div>";
     var foot = '<footer class="v3-foot"><span>기획본부 뉴스 · 사내 참고용이며 회사 공식 의견이 아닙니다.</span><span>편집 ' + esc(ed.edited_at || "") + "</span></footer>";
     return '<div class="v3-root">' + v3Symbols() + '<div class="v3-page"><div class="v3-stripe"></div>' + v3Mast(b, nav) + v3Dateline(b, nav, ed) + v3Marquee(secs) + v3TabButtons(secs, archList.length) + news + srcTab + v3DocPanels() + archTab + foot + "</div></div>";
