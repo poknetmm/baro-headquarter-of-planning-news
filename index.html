@@ -510,8 +510,8 @@ html.v3{font-size:calc(16px * var(--scale))}
 .v3-marq .v3-ctl{flex:none;min-height:40px;padding:0 14px;border:1.5px solid var(--rule);background:var(--surface);font:inherit;font-size:1rem;border-radius:6px;cursor:pointer}
 @keyframes v3marq{to{transform:translateX(-50%)}}
 @media (prefers-reduced-motion:reduce){.v3-marq .v3-track{animation:none}}
-.v3-tabs{display:flex;gap:6px;padding-top:14px;border-bottom:3px solid var(--brand-navy-deep)}
-.v3-tabs button{min-height:52px;padding:0 24px;border:1.5px solid var(--rule);border-bottom:0;background:var(--bg);font:inherit;font-size:1.125rem;font-weight:700;color:var(--ink-2);border-radius:8px 8px 0 0;cursor:pointer}
+.v3-tabs{display:flex;gap:6px;padding-top:14px;border-bottom:3px solid var(--brand-navy-deep);overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+.v3-tabs button{flex:none;white-space:nowrap;min-height:52px;padding:0 18px;border:1.5px solid var(--rule);border-bottom:0;background:var(--bg);font:inherit;font-size:1.125rem;font-weight:700;color:var(--ink-2);border-radius:8px 8px 0 0;cursor:pointer}
 .v3-tabs button[aria-selected="true"]{background:var(--brand-navy-deep);border-color:var(--brand-navy-deep);color:#fff}
 .v3-tabs button small{font-size:1rem;font-weight:500;margin-left:4px}
 .v3-panel[hidden]{display:none}
@@ -547,6 +547,27 @@ html.v3{font-size:calc(16px * var(--scale))}
 .v3-arts ul{margin:4px 0 0;padding-left:1.2em}
 .v3-arts li{padding:2px 0}
 .v3-listnote{font-size:1rem;color:var(--ink-2);margin:16px 0 0}
+/* 금융당국 자료 탭(시장동향·보도자료·신문스크랩) — 자료 목록 + 아래 PDF 쪽 보기 */
+.v3-docmsg{padding:28px 0;color:var(--ink-2);font-size:1.0625rem}
+.v3-docmsg a{font-weight:700}
+.v3-doclist{list-style:none;margin:12px 0 0;padding:0;border-top:1px solid var(--rule)}
+.v3-doclist li{border-bottom:1px solid var(--rule)}
+.v3-docitem{display:block;width:100%;min-height:44px;text-align:left;background:transparent;border:0;border-left:4px solid transparent;font:inherit;color:var(--ink);padding:12px 10px;cursor:pointer}
+.v3-docitem[aria-pressed="true"]{background:var(--accent-soft);border-left-color:var(--accent)}
+.v3-docitem .v3-dh{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px}
+.v3-docitem .v3-org{font-weight:700;color:var(--brand-navy-deep)}
+.v3-docitem .v3-dt{font-weight:700;font-size:1.25rem;line-height:1.5;flex:1 1 16rem;min-width:0;overflow-wrap:anywhere}
+.v3-docitem .v3-dd{font-size:1rem;color:var(--ink-2);white-space:nowrap}
+.v3-docitem .v3-why{display:block;margin-top:2px;font-size:1rem;color:var(--ink-2)}
+.v3-docact{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:16px 0 10px}
+.v3-docact a,.v3-docact button{display:inline-flex;align-items:center;min-height:44px;padding:0 16px;border:1.5px solid var(--accent);border-radius:6px;background:var(--accent);color:var(--accent-ink);font:inherit;font-size:1rem;font-weight:700;text-decoration:none;cursor:pointer}
+.v3-docact a.v3-ghost{background:var(--surface);color:var(--accent)}
+.v3-docact .v3-note{font-size:1rem;color:var(--ink-2)}
+.v3-pdfstat{margin:8px 0;font-size:1rem;color:var(--ink-2)}
+.v3-pages{display:flex;flex-direction:column;align-items:center;gap:12px;background:var(--surface-2);padding:12px;border:1px solid var(--rule);border-radius:6px;max-width:100%}
+.v3-pages:empty{display:none}
+.v3-pdfpage{width:100%;max-width:900px;background:var(--surface);box-shadow:0 0 0 1px var(--rule);display:flex;align-items:center;justify-content:center;color:var(--ink-2);font-size:1rem}
+.v3-pdfpage canvas{display:block;width:100%;height:auto}
 .v3-index{display:grid;grid-template-columns:repeat(5,1fr);border-bottom:1px solid var(--rule-strong)}
 .v3-index a{display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 6px;text-decoration:none;color:var(--ink);font-weight:700;font-size:1.0625rem;border-right:1px solid var(--rule);min-height:56px}
 .v3-index a:last-child{border-right:0}
@@ -646,7 +667,7 @@ html.v3{font-size:calc(16px * var(--scale))}
   .v3-stripe,.v3-marq,.v3-tabs,.v3-size,.v3-dateline .v3-tools{display:none}
   .v3-page{box-shadow:none;max-width:none}
   #v3-t-news{display:block !important}
-  #v3-t-list,#v3-t-src,#v3-t-arch{display:none !important}
+  #v3-t-list,#v3-t-src,#v3-t-arch,#v3-t-mkt,#v3-t-press,#v3-t-scrap{display:none !important}
   .v3-root{print-color-adjust:exact;-webkit-print-color-adjust:exact}
   @page{size:A4}
 }
@@ -1300,7 +1321,9 @@ window.__drawCharts = function(){
   }
   window.v3GoArchive = function () { window.v3ShowTab(document.querySelector('.v3-tabs button[data-panel="v3-t-arch"]')); };
   function v3TabButtons(secs, archN) {
-    var tabs = [["v3-t-news", "오늘 신문", null], ["v3-t-list", "전체 기사 목록", null], ["v3-t-src", "출처", null], ["v3-t-arch", "지난 호", archN + "호"]];
+    var tabs = [["v3-t-news", "오늘 신문", null], ["v3-t-list", "전체 기사 목록", null], ["v3-t-src", "출처", null],
+      ["v3-t-mkt", "금융당국 시장동향", null], ["v3-t-press", "금융당국 보도자료", null], ["v3-t-scrap", "금융당국 신문스크랩", null],
+      ["v3-t-arch", "지난 호", archN + "호"]];
     return '<div class="v3-tabs" role="tablist">' + tabs.map(function (t, i) {
       return '<button type="button" role="tab" data-panel="' + t[0] + '" aria-selected="' + (i === 0 ? "true" : "false") + '" onclick="v3ShowTab(this)">' + t[1] + (t[2] ? "<small>" + esc(t[2]) + "</small>" : "") + "</button>";
     }).join("") + "</div>";
@@ -1310,7 +1333,10 @@ window.__drawCharts = function(){
     var id = btn.getAttribute("data-panel");
     document.querySelectorAll(".v3-tabs button").forEach(function (b) { b.setAttribute("aria-selected", b === btn ? "true" : "false"); });
     document.querySelectorAll(".v3-panel").forEach(function (p) { p.hidden = p.id !== id; });
+    try { btn.scrollIntoView({ block: "nearest", inline: "nearest" }); } catch (e) {}
     document.querySelector(".v3-tabs").scrollIntoView({ block: "nearest" });
+    var dk = DOC_KIND_OF_PANEL[id];
+    if (dk) v3DocActivate(dk);
   };
   window.v3JumpNews = function (ev, id) {
     if (ev) ev.preventDefault();
@@ -1337,6 +1363,247 @@ window.__drawCharts = function(){
     l.href = "https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;800;900&family=Noto+Sans+KR:wght@400;500;700;900&display=swap";
     document.head.appendChild(l);
   }
+  // ---------- 금융당국 자료 탭 (변경안 설계 v4) ----------
+  // 표 public.brief_docs(익명 읽기)에서 그 호의 자료 행을 받고, 파일은 Storage 공개 버킷 news-docs에서 pdf.js로 쪽 단위로 그린다.
+  // 표가 아직 없거나 오류면 새 탭 세 곳만 "불러오지 못했습니다"를 보이고 다른 탭은 그대로 둔다.
+  var DOC_KINDS = [
+    { kind: "market", panel: "v3-t-mkt", intro: "금융당국이 올린 최신 시장동향 자료입니다. 아래에서 PDF 원문을 쪽 단위로 볼 수 있습니다." },
+    { kind: "press", panel: "v3-t-press", intro: "이번 호 기사 컨셉에 맞춰 고른 금융위·금감원 보도자료입니다. 목록에서 고르면 PDF 원문을 아래에 보여 줍니다." },
+    { kind: "scrap", panel: "v3-t-scrap", intro: "금감원 공보실이 발췌한 신문스크랩입니다. 용량이 커서 '원문 보기'를 눌러야 불러옵니다. 사내 참고용입니다." }
+  ];
+  var DOC_KIND_IDS = DOC_KINDS.map(function (k) { return k.kind; });
+  var DOC_KIND_OF_PANEL = {};
+  var DOC_PANEL_OF = {};
+  DOC_KINDS.forEach(function (k) { DOC_KIND_OF_PANEL[k.panel] = k.kind; DOC_PANEL_OF[k.kind] = k.panel; });
+  var DOC_KEEP_DAYS = 30;
+  var DOC_HOSTS = ["fsc.go.kr", "fss.or.kr", "family.fss.or.kr"];
+  var PDFJS_BASE = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/";
+  var PDFJS_SRI = "sha512-q+4liFwdPC/bNdhUpZx6aXDx/h77yEQtn4I1slHydcbZK34nLaR3cAeYSJshoxIOq3mjEf7xJE8YWIUHMn+oCQ==";
+  var V3D = null;
+  var V3_PDFJS = null;
+
+  // 원문 사이트 링크는 https이면서 허용 호스트(fsc.go.kr·fss.or.kr·family.fss.or.kr와 그 하위)만 연다
+  function v3DocOrigin(u) {
+    if (!u || !/^https:\/\//i.test(u)) return null;
+    var h;
+    try { h = new URL(u).hostname.toLowerCase(); } catch (e) { return null; }
+    var ok = DOC_HOSTS.some(function (d) { return h === d || h.slice(-(d.length + 1)) === "." + d; });
+    return ok ? u : null;
+  }
+  // Storage 공개 주소. 경로는 글자·숫자·점·밑줄·하이픈·슬래시만 허용하고 ..는 거부한다
+  function v3DocFile(path) {
+    if (!path || typeof path !== "string" || path.indexOf("..") >= 0 || path.charAt(0) === "/" || !/^[\p{L}\p{N}._\-\/]+$/u.test(path)) return null;
+    return CFG.supabaseUrl + "/storage/v1/object/public/news-docs/" + path.split("/").map(encodeURIComponent).join("/");
+  }
+  function v3DocExpired(date) {
+    var p = ymd(date), t = new Date();
+    return (Date.UTC(t.getFullYear(), t.getMonth(), t.getDate()) - Date.UTC(p.y, p.m - 1, p.d)) / 86400000 > DOC_KEEP_DAYS;
+  }
+  function v3DocPanels() {
+    return DOC_KINDS.map(function (k) {
+      return '<div class="v3-panel" id="' + k.panel + '" role="tabpanel" hidden><p class="v3-listnote">' + esc(k.intro) + '</p><div class="v3-docbody"><p class="v3-docmsg">불러오는 중…</p></div></div>';
+    }).join("");
+  }
+  function v3DocsInit(date, secs) {
+    V3D = { date: date, status: "loading", rows: { market: [], press: [], scrap: [] }, st: {}, pages: {} };
+    (secs || []).forEach(function (s) { if (s && s.key) V3D.pages[s.key] = s.no + "면 " + (s.name || ""); });
+    DOC_KINDS.forEach(function (k) { V3D.st[k.kind] = { sel: 0, token: 0, started: false, viewing: false, queue: [], busy: false }; });
+    var expired = v3DocExpired(date);
+    rest("brief_docs?select=brief_date,kind,seq,org,title,doc_date,origin_url,storage_path,orig_path,why,page&brief_date=eq." + encodeURIComponent(date) + "&order=seq.asc&limit=60")
+      .then(function (rows) {
+        (rows || []).forEach(function (r) { if (r && DOC_KIND_IDS.indexOf(r.kind) >= 0) V3D.rows[r.kind].push(r); });
+        V3D.status = expired ? "expired" : "ok";
+      })
+      .catch(function () { V3D.status = expired ? "expired" : "error"; })
+      .then(function () {
+        DOC_KINDS.forEach(function (k) { v3DocPaint(k.kind); v3DocActivate(k.kind); });
+      });
+  }
+  function v3DocMsg(t) { return '<p class="v3-docmsg">' + t + "</p>"; }
+  function v3DocPaint(kind) {
+    var panel = document.getElementById(DOC_PANEL_OF[kind]);
+    var box = panel && panel.querySelector(".v3-docbody");
+    if (!box || !V3D) return;
+    v3DocStop(kind);
+    var rows = V3D.rows[kind], st = V3D.st[kind];
+    if (V3D.status === "loading") return;
+    if (V3D.status === "error") { box.innerHTML = v3DocMsg("자료를 불러오지 못했습니다."); return; }
+    if (V3D.status === "expired") {
+      var lis = rows.map(function (d) {
+        var u = v3DocOrigin(d.origin_url);
+        return "<li><b>" + esc(d.org || "") + "</b>" + (u ? v3A(u, esc(d.title || "")) : "<span>" + esc(d.title || "") + "</span>") + '<span class="v3-d">' + esc(d.doc_date || "") + "</span></li>";
+      }).join("");
+      box.innerHTML = v3DocMsg("보관 기간(" + DOC_KEEP_DAYS + "일)이 지났습니다. 원문은 해당 기관 사이트에서 확인하십시오.") + (lis ? '<ul class="v3-srclist">' + lis + "</ul>" : "");
+      return;
+    }
+    if (!rows.length) { box.innerHTML = v3DocMsg("이 호에는 자료가 없습니다."); return; }
+    var list = rows.map(function (d, i) {
+      var pg = kind === "press" && d.page ? (V3D.pages[d.page] || d.page) : "";
+      var why = kind === "press" && (pg || d.why) ? '<span class="v3-why">' + (pg ? '<span class="v3-tag">' + esc(pg) + "</span>" : "") + esc(d.why || "") + "</span>" : "";
+      return '<li><button type="button" class="v3-docitem" data-doc-sel="' + i + '" data-kind="' + kind + '" aria-pressed="' + (i === st.sel ? "true" : "false") + '">' +
+        '<span class="v3-dh"><span class="v3-org">' + esc(d.org || "") + '</span><span class="v3-dt">' + esc(d.title || "") + '</span><span class="v3-dd">' + esc(d.doc_date || "") + "</span></span>" + why + "</button></li>";
+    }).join("");
+    box.innerHTML = '<ul class="v3-doclist">' + list + '</ul><div class="v3-docdetail"></div>';
+    v3DocDetail(kind);
+  }
+  function v3DocDetail(kind) {
+    var panel = document.getElementById(DOC_PANEL_OF[kind]);
+    var box = panel && panel.querySelector(".v3-docdetail");
+    if (!box) return;
+    var st = V3D.st[kind], d = V3D.rows[kind][st.sel];
+    if (!d) { box.innerHTML = ""; return; }
+    var seq = String(d.seq == null ? "" : d.seq).replace(/[^0-9]/g, "");
+    var base = kind + "-" + V3D.date + (seq ? "-" + seq : "");
+    var view = v3DocFile(d.storage_path);
+    var orig = kind === "scrap" ? v3DocFile(d.orig_path) : null;
+    var dl = orig || view;
+    var dlName = base + (orig ? "-orig" : "") + ".pdf";
+    var origin = v3DocOrigin(d.origin_url);
+    var act = "";
+    if (kind === "scrap" && !st.viewing && view) act += '<button type="button" data-doc-act="view" data-kind="scrap">원문 보기</button><span class="v3-note">약 10MB를 불러옵니다</span>';
+    if (dl) act += '<a href="' + esc(dl + "?download=" + encodeURIComponent(dlName)) + '" rel="noopener">PDF 내려받기</a>';
+    if (kind === "scrap" && dl) act += '<span class="v3-note">' + (orig ? "원본 파일" : "압축본 파일") + "</span>";
+    if (origin) act += '<a class="v3-ghost" href="' + esc(origin) + '" target="_blank" rel="noopener">원문 사이트에서 보기</a>';
+    box.innerHTML = '<div class="v3-docact">' + act + '</div><p class="v3-pdfstat" role="status">' + (view ? "" : "PDF 파일이 없습니다.") + '</p><div class="v3-pages"></div>';
+  }
+  // 탭이 보일 때 시장동향·보도자료는 바로 그리고, 신문스크랩은 '원문 보기' 단추를 눌러야 그린다
+  function v3DocActivate(kind) {
+    if (!V3D || V3D.status !== "ok") return;
+    var panel = document.getElementById(DOC_PANEL_OF[kind]);
+    if (!panel || panel.hidden || kind === "scrap") return;
+    var st = V3D.st[kind];
+    if (st.started || !V3D.rows[kind].length) return;
+    v3DocStart(kind);
+  }
+  function v3DocStop(kind) {
+    var st = V3D && V3D.st[kind];
+    if (!st) return;
+    st.token++; st.started = false; st.viewing = false; st.queue = []; st.busy = false;
+    if (st.io) { st.io.disconnect(); st.io = null; }
+    if (st.task) { try { st.task.destroy(); } catch (e) {} st.task = null; }
+    st.pdf = null; st.pagesEl = null;
+  }
+  // pdf.js는 PDF를 처음 그릴 때만 cdnjs 고정 버전(+무결성 검사)으로 불러온다
+  function v3LoadPdfJs() {
+    if (V3_PDFJS) return V3_PDFJS;
+    V3_PDFJS = new Promise(function (resolve, reject) {
+      if (window.pdfjsLib) { window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_BASE + "pdf.worker.min.js"; resolve(window.pdfjsLib); return; }
+      var s = document.createElement("script");
+      s.src = PDFJS_BASE + "pdf.min.js"; s.integrity = PDFJS_SRI; s.crossOrigin = "anonymous";
+      s.onload = function () {
+        if (!window.pdfjsLib) { V3_PDFJS = null; reject(new Error("pdfjs")); return; }
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_BASE + "pdf.worker.min.js";
+        resolve(window.pdfjsLib);
+      };
+      s.onerror = function () { V3_PDFJS = null; reject(new Error("pdfjs")); };
+      document.head.appendChild(s);
+    });
+    return V3_PDFJS;
+  }
+  function v3DocStart(kind) {
+    var panel = document.getElementById(DOC_PANEL_OF[kind]);
+    var detail = panel && panel.querySelector(".v3-docdetail");
+    var st = V3D.st[kind], d = V3D.rows[kind][st.sel];
+    var url = v3DocFile(d && d.storage_path);
+    var stat = detail && detail.querySelector(".v3-pdfstat"), pagesEl = detail && detail.querySelector(".v3-pages");
+    if (!url || !stat || !pagesEl) return;
+    st.started = true;
+    var tok = ++st.token;
+    st.queue = []; st.busy = false;
+    var w = detail.clientWidth ? detail.clientWidth - 26 : Math.min(window.innerWidth, 940) - 50;
+    st.width = Math.max(200, Math.min(w, 900));
+    stat.textContent = "PDF를 불러오는 중…";
+    function fail() { if (st.token === tok) stat.textContent = "PDF를 불러오지 못했습니다. 위의 단추로 내려받거나 원문 사이트에서 확인하십시오."; }
+    v3LoadPdfJs().then(function (lib) {
+      if (st.token !== tok) return;
+      st.task = lib.getDocument({ url: url, isEvalSupported: false });
+      return st.task.promise.then(function (pdf) {
+        if (st.token !== tok) return;
+        st.pdf = pdf;
+        return pdf.getPage(1).then(function (p1) {
+          if (st.token !== tok) return;
+          var vp = p1.getViewport({ scale: 1 });
+          var ratio = (Math.round(vp.width * 100) / 100) + " / " + (Math.round(vp.height * 100) / 100);
+          var html = "";
+          for (var i = 0; i < pdf.numPages; i++) html += '<div class="v3-pdfpage" data-p="' + i + '" style="aspect-ratio:' + ratio + '">' + (i + 1) + "쪽</div>";
+          pagesEl.innerHTML = html;
+          st.pagesEl = pagesEl;
+          stat.textContent = "총 " + pdf.numPages + "쪽 · 아래로 내리면 이어서 그립니다.";
+          var els = pagesEl.querySelectorAll(".v3-pdfpage");
+          if ("IntersectionObserver" in window) {
+            var io = new IntersectionObserver(function (es) {
+              es.forEach(function (e) {
+                if (!e.isIntersecting) return;
+                io.unobserve(e.target);
+                st.queue.push(parseInt(e.target.getAttribute("data-p"), 10));
+              });
+              st.queue.sort(function (a, b) { return a - b; });
+              v3DocPump(st, tok);
+            }, { rootMargin: "800px 0px" });
+            st.io = io;
+            Array.prototype.forEach.call(els, function (el) { io.observe(el); });
+          } else {
+            for (var j = 0; j < els.length; j++) st.queue.push(j);
+            v3DocPump(st, tok);
+          }
+        });
+      });
+    }).catch(fail);
+  }
+  // 쪽은 한 번에 하나씩, 번호 순서대로 그린다(휴대폰이 멈추지 않게 쪽 사이에 한 박자 쉰다)
+  function v3DocPump(st, tok) {
+    if (st.token !== tok || st.busy || !st.queue.length) return;
+    var idx = st.queue.shift();
+    st.busy = true;
+    v3DocRenderPage(st, tok, idx).catch(function () {
+      if (st.token !== tok || !st.pagesEl) return;
+      var h = st.pagesEl.querySelector('[data-p="' + idx + '"]');
+      if (h) h.textContent = (idx + 1) + "쪽을 그리지 못했습니다.";
+    }).then(function () {
+      st.busy = false;
+      setTimeout(function () { v3DocPump(st, tok); }, 30);
+    });
+  }
+  function v3DocRenderPage(st, tok, idx) {
+    var holder = st.pagesEl && st.pagesEl.querySelector('[data-p="' + idx + '"]');
+    if (!holder || !st.pdf) return Promise.resolve();
+    return st.pdf.getPage(idx + 1).then(function (page) {
+      if (st.token !== tok) return;
+      var base = page.getViewport({ scale: 1 });
+      var css = st.width / base.width;
+      var dpr = Math.min(window.devicePixelRatio || 1, 2);
+      var vp = page.getViewport({ scale: css * dpr });
+      if (vp.width * vp.height > 8e6) vp = page.getViewport({ scale: css * dpr * Math.sqrt(8e6 / (vp.width * vp.height)) });
+      var cv = document.createElement("canvas");
+      cv.width = Math.floor(vp.width); cv.height = Math.floor(vp.height);
+      return page.render({ canvasContext: cv.getContext("2d"), viewport: vp }).promise.then(function () {
+        if (st.token !== tok) return;
+        holder.style.aspectRatio = ""; holder.textContent = ""; holder.appendChild(cv);
+        page.cleanup();
+      });
+    });
+  }
+  // 자료 선택·원문 보기 단추는 data 속성 + 위임 이벤트로 처리한다(onclick에 값을 끼워 넣지 않음)
+  document.addEventListener("click", function (ev) {
+    var t = ev.target && ev.target.closest && ev.target.closest("[data-doc-sel],[data-doc-act]");
+    if (!t || !V3D) return;
+    var kind = t.getAttribute("data-kind");
+    if (DOC_KIND_IDS.indexOf(kind) < 0 || V3D.status !== "ok") return;
+    var st = V3D.st[kind];
+    if (t.hasAttribute("data-doc-sel")) {
+      var i = parseInt(t.getAttribute("data-doc-sel"), 10);
+      if (!(i >= 0 && i < V3D.rows[kind].length) || i === st.sel) return;
+      st.sel = i;
+      v3DocPaint(kind);
+      v3DocActivate(kind);
+    } else if (t.getAttribute("data-doc-act") === "view" && kind === "scrap") {
+      v3DocStop(kind);
+      st.viewing = true;
+      v3DocDetail(kind);
+      v3DocStart(kind);
+    }
+  });
+
   function renderV3(b, q, nav, archList) {
     document.documentElement.classList.add("v3");
     v3EnsureFonts();
@@ -1349,7 +1616,7 @@ window.__drawCharts = function(){
     var srcTab = '<div class="v3-panel" id="v3-t-src" role="tabpanel" hidden>' + v3SrcTab(B) + "</div>";
     var archTab = '<div class="v3-panel" id="v3-t-arch" role="tabpanel" hidden>' + v3ArchiveTab(archList, b) + "</div>";
     var foot = '<footer class="v3-foot"><span>기획본부 뉴스 · 사내 참고용이며 회사 공식 의견이 아닙니다.</span><span>편집 ' + esc(ed.edited_at || "") + "</span></footer>";
-    return '<div class="v3-root">' + v3Symbols() + '<div class="v3-page"><div class="v3-stripe"></div>' + v3Mast(b, nav) + v3Dateline(b, nav, ed) + v3Marquee(secs) + v3TabButtons(secs, archList.length) + news + listTab + srcTab + archTab + foot + "</div></div>";
+    return '<div class="v3-root">' + v3Symbols() + '<div class="v3-page"><div class="v3-stripe"></div>' + v3Mast(b, nav) + v3Dateline(b, nav, ed) + v3Marquee(secs) + v3TabButtons(secs, archList.length) + news + listTab + srcTab + v3DocPanels() + archTab + foot + "</div></div>";
   }
 
   // ---------- boot ----------
@@ -1368,7 +1635,7 @@ window.__drawCharts = function(){
       var v3 = !!(b.body && b.body.edition && b.body.edition.version === 3);
       return Promise.all([neighbours(b.brief_date), loadQuotes(b.basis_date), loadArchive(v3 ? 60 : 8)]).then(function (r) {
         var expanded = !!(b.body && b.body.sections);
-        if (v3) { root.innerHTML = renderV3(b, r[1], r[0], r[2]); }
+        if (v3) { root.innerHTML = renderV3(b, r[1], r[0], r[2]); v3DocsInit(b.brief_date, (b.body || {}).sections); }
         else if (expanded && view === "market") { root.innerHTML = renderBrief(marketBrief(b), r[1], r[0], r[2], "market"); afterRender(); }
         else if (expanded) { root.innerHTML = renderExpanded(b, r[1], r[0], r[2]); afterRender(); fitMarquee(); }
         else { root.innerHTML = renderBrief(b, r[1], r[0], r[2], "legacy"); afterRender(); }
