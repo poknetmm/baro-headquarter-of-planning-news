@@ -547,6 +547,7 @@ html.v3{font-size:calc(16px * var(--scale))}
 .v3-arts ul{margin:4px 0 0;padding-left:1.2em}
 .v3-arts li{padding:2px 0}
 .v3-arts-src{grid-column:1/-1}
+.v3-presslist{margin-top:36px}
 .v3-arts-src .v3-lh{font-size:1.125rem;margin:12px 0 4px}
 .v3-arts .v3-srclist{padding-left:0}
 .v3-arts .v3-srclist li{padding:8px 0}
@@ -1396,14 +1397,35 @@ window.__drawCharts = function(){
   }
   function v3DocPanels() {
     return DOC_KINDS.map(function (k) {
-      return '<div class="v3-panel" id="' + k.panel + '" role="tabpanel" hidden><p class="v3-listnote">' + esc(k.intro) + '</p><div class="v3-docbody"><p class="v3-docmsg">불러오는 중…</p></div></div>';
+      var extra = k.kind === "press" ? '<section class="v3-presslist"><p class="v3-docmsg">최근 보도자료 목록을 불러오는 중…</p></section>' : "";
+      return '<div class="v3-panel" id="' + k.panel + '" role="tabpanel" hidden><p class="v3-listnote">' + esc(k.intro) + '</p><div class="v3-docbody"><p class="v3-docmsg">불러오는 중…</p></div>' + extra + "</div>";
     }).join("");
+  }
+  // 최근 15일 보도자료 목록(2026-10-27 대표 지시). 홈PC가 한 시간마다 저장 공간에 올리는 press-list.json을 읽는다.
+  // 보고 있는 호와 관계없이 지금 기준 목록이다. 제목을 누르면 원문 사이트(허용 호스트만)가 새 창으로 열린다
+  function v3PressListLoad() {
+    var box = document.querySelector(".v3-presslist");
+    if (!box) return;
+    var url = CFG.supabaseUrl + "/storage/v1/object/public/news-docs/press-list.json?t=" + Math.floor(Date.now() / 300000);
+    fetch(url).then(function (r) { if (!r.ok) throw new Error("http"); return r.json(); }).then(function (d) {
+      var items = (d && Array.isArray(d.items)) ? d.items : [];
+      var lis = items.map(function (it) {
+        var u = v3DocOrigin(it.url);
+        return "<li><b>" + esc(it.org || "") + "</b>" + (u ? v3A(u, esc(it.title || "")) : "<span>" + esc(it.title || "") + "</span>") + '<span class="v3-d">' + esc(it.date || "") + "</span></li>";
+      }).join("");
+      box.innerHTML = '<h3 class="v3-lh">최근 ' + esc(String(d.days || 15)) + "일 보도자료 <small>" + items.length + "건 · " + esc(String(d.updated || "").replace("T", " ")) + " 기준</small></h3>" +
+        '<p class="v3-listnote">금융위·금감원 보도자료 전체입니다. 제목을 누르면 원문 사이트로 이동합니다.</p>' +
+        (lis ? '<ul class="v3-srclist">' + lis + "</ul>" : v3DocMsg("목록이 비어 있습니다."));
+    }).catch(function () {
+      box.innerHTML = v3DocMsg("최근 보도자료 목록을 불러오지 못했습니다.");
+    });
   }
   function v3DocsInit(date, secs) {
     V3D = { date: date, status: "loading", rows: { market: [], press: [], scrap: [] }, st: {}, pages: {} };
     (secs || []).forEach(function (s) { if (s && s.key) V3D.pages[s.key] = s.no + "면 " + (s.name || ""); });
     DOC_KINDS.forEach(function (k) { V3D.st[k.kind] = { sel: 0, token: 0, started: false, viewing: false, queue: [], busy: false }; });
     var expired = v3DocExpired(date);
+    v3PressListLoad();
     rest("brief_docs?select=brief_date,kind,seq,org,title,doc_date,origin_url,storage_path,orig_path,why,page&brief_date=eq." + encodeURIComponent(date) + "&order=seq.asc&limit=60")
       .then(function (rows) {
         (rows || []).forEach(function (r) { if (r && DOC_KIND_IDS.indexOf(r.kind) >= 0) V3D.rows[r.kind].push(r); });
