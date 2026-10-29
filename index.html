@@ -1207,9 +1207,39 @@ window.__drawCharts = function(){
     }).join("");
     return '<section class="v3-editorial"><div class="v3-head">' + v3Icon("pen") + "사설</div><div class=\"v3-eds\">" + arts + "</div></section>";
   }
+  // 기사 1건당 대표 원문 1개만 남긴다(2026-10-29 대표 결정) — 실린 기사 제목과 원문 제목의 두 글자 자카드 유사도가 가장 큰 것, 같으면 먼저 나온 것.
+  // 어느 기사에도 안 붙은 원문은 그대로 둔다
+  function v3Bigrams(t) {
+    var s = String(t || "").replace(/[^가-힣A-Za-z0-9]/g, ""), g = {};
+    for (var i = 0; i < s.length - 1; i++) g[s.substr(i, 2)] = 1;
+    return g;
+  }
+  function v3Jaccard(a, b) {
+    var A = v3Bigrams(a), B = v3Bigrams(b), inter = 0, uni = 0, k;
+    for (k in A) { uni++; if (B[k]) inter++; }
+    for (k in B) if (!A[k]) uni++;
+    return uni ? inter / uni : 0;
+  }
+  function v3RepSources(B) {
+    var list = B.sources || [], arts = [], owner = {}, best = {};
+    if (B.front && B.front.story) arts.push(B.front.story);
+    (B.sections || []).forEach(function (s) {
+      if (s.empty) return;
+      if (s.lead) arts.push(s.lead);
+      (s.subs || []).forEach(function (x) { arts.push(x); });
+    });
+    arts.forEach(function (a, i) { (a.sources || []).forEach(function (s) { if (s.url && !(s.url in owner)) owner[s.url] = i; }); });
+    list.forEach(function (s, j) {
+      var i = owner[s.url];
+      if (i == null) return;
+      var sc = v3Jaccard(arts[i].title, s.title);
+      if (!best[i] || sc > best[i].sc) best[i] = { j: j, sc: sc };
+    });
+    return list.filter(function (s, j) { var i = owner[s.url]; return i == null || best[i].j === j; });
+  }
   function v3SrcTab(B) {
-    var list = B.sources || [];
-    return '<p class="v3-listnote">이번 호 기사의 근거가 된 원문 기사 ' + list.length + "건입니다. 제목을 누르면 원문이 새 창으로 열립니다.</p>" + v3SrcGroupsHtml(list);
+    var list = v3RepSources(B);
+    return '<p class="v3-listnote">이번 호 기사마다 대표 원문 1건씩, ' + list.length + "건입니다. 제목을 누르면 원문이 새 창으로 열립니다.</p>" + v3SrcGroupsHtml(list);
   }
   function v3SrcGroupsHtml(list) {
     var byPage = {}, out = "";
@@ -1229,13 +1259,13 @@ window.__drawCharts = function(){
   }
   // 지난 기사목록: 그 호의 원문 기사 목록(sources)을 기사목록 탭과 같은 꼴로 보여 준다. sources가 없는 옛 호만 기사 제목으로 대신한다
   function v3ArchCount(AB) {
-    return (AB.sources && AB.sources.length) || v3CountArticles(AB.front, AB.sections);
+    return (AB.sources && AB.sources.length && v3RepSources(AB).length) || v3CountArticles(AB.front, AB.sections);
   }
   function v3ArchHas(AB) {
     return (AB.sources && AB.sources.length) || (AB.sections && AB.sections.length);
   }
   function v3ArchGroupsHtml(AB) {
-    if (AB.sources && AB.sources.length) return '<div class="v3-arts-src">' + v3SrcGroupsHtml(AB.sources) + "</div>";
+    if (AB.sources && AB.sources.length) return '<div class="v3-arts-src">' + v3SrcGroupsHtml(v3RepSources(AB)) + "</div>";
     return (AB.sections || []).filter(function (s) { return !s.empty; }).map(function (s) {
       var titles = [];
       if (s.lead && s.lead.title) titles.push(s.lead.title);
@@ -1364,7 +1394,7 @@ window.__drawCharts = function(){
   // 표가 아직 없거나 오류면 새 탭 세 곳만 "불러오지 못했습니다"를 보이고 다른 탭은 그대로 둔다.
   var DOC_KINDS = [
     { kind: "market", panel: "v3-t-mkt", intro: "금융당국이 올린 최신 시장동향 자료입니다. 아래에서 PDF 원문을 쪽 단위로 볼 수 있습니다." },
-    { kind: "press", panel: "v3-t-press", intro: "이번 호 기사 컨셉에 맞춰 고른 금융위·금감원 보도자료입니다. 목록에서 고르면 PDF 원문을 아래에 보여 줍니다." },
+    { kind: "press", panel: "v3-t-press", intro: "이번 호 기사 컨셉에 맞춰 고른 금융위·금감원 보도자료입니다. 목록에서 고르면 PDF 원문을 아래에 보여 주고, 다시 누르면 닫습니다." },
     { kind: "scrap", panel: "v3-t-scrap", intro: "금감원 공보실이 발췌한 신문스크랩입니다. 용량이 커서 '원문 보기'를 눌러야 불러옵니다. 사내 참고용입니다." }
   ];
   var DOC_KIND_IDS = DOC_KINDS.map(function (k) { return k.kind; });
@@ -1423,7 +1453,8 @@ window.__drawCharts = function(){
   function v3DocsInit(date, secs) {
     V3D = { date: date, status: "loading", rows: { market: [], press: [], scrap: [] }, st: {}, pages: {} };
     (secs || []).forEach(function (s) { if (s && s.key) V3D.pages[s.key] = s.no + "면 " + (s.name || ""); });
-    DOC_KINDS.forEach(function (k) { V3D.st[k.kind] = { sel: 0, token: 0, started: false, viewing: false, queue: [], busy: false }; });
+    // 보도자료는 목록만 먼저 보이고(sel -1) 누르면 PDF를 연다(2026-10-29 대표 결정)
+    DOC_KINDS.forEach(function (k) { V3D.st[k.kind] = { sel: k.kind === "press" ? -1 : 0, token: 0, started: false, viewing: false, queue: [], busy: false }; });
     var expired = v3DocExpired(date);
     v3PressListLoad();
     rest("brief_docs?select=brief_date,kind,seq,org,title,doc_date,origin_url,storage_path,orig_path,why,page&brief_date=eq." + encodeURIComponent(date) + "&order=seq.asc&limit=60")
@@ -1447,7 +1478,7 @@ window.__drawCharts = function(){
     if (V3D.status === "error") { box.innerHTML = v3DocMsg("자료를 불러오지 못했습니다."); return; }
     if (V3D.status === "expired") {
       var lis = rows.map(function (d) {
-        var u = v3DocOrigin(d.origin_url);
+        var u = kind === "scrap" ? null : v3DocOrigin(d.origin_url);
         return "<li><b>" + esc(d.org || "") + "</b>" + (u ? v3A(u, esc(d.title || "")) : "<span>" + esc(d.title || "") + "</span>") + '<span class="v3-d">' + esc(d.doc_date || "") + "</span></li>";
       }).join("");
       box.innerHTML = v3DocMsg("보관 기간(" + DOC_KEEP_DAYS + "일)이 지났습니다. 원문은 해당 기관 사이트에서 확인하십시오.") + (lis ? '<ul class="v3-srclist">' + lis + "</ul>" : "");
@@ -1480,7 +1511,8 @@ window.__drawCharts = function(){
     if (kind === "scrap" && !st.viewing && view) act += '<button type="button" data-doc-act="view" data-kind="scrap">원문 보기</button><span class="v3-note">약 10MB를 불러옵니다</span>';
     if (dl) act += '<a href="' + esc(dl + "?download=" + encodeURIComponent(dlName)) + '" rel="noopener">PDF 내려받기</a>';
     if (kind === "scrap" && dl) act += '<span class="v3-note">' + (orig ? "원본 파일" : "압축본 파일") + "</span>";
-    if (origin) act += '<a class="v3-ghost" href="' + esc(origin) + '" target="_blank" rel="noopener">원문 사이트에서 보기</a>';
+    // 신문스크랩 원문 사이트는 금감원가족 로그인이 필요해 링크를 두지 않는다(2026-10-29 대표 결정)
+    if (origin && kind !== "scrap") act += '<a class="v3-ghost" href="' + esc(origin) + '" target="_blank" rel="noopener">원문 사이트에서 보기</a>';
     box.innerHTML = '<div class="v3-docact">' + act + '</div><p class="v3-pdfstat" role="status">' + (view ? "" : "PDF 파일이 없습니다.") + '</p><div class="v3-pages"></div>';
   }
   // 탭이 보일 때 시장동향·보도자료는 바로 그리고, 신문스크랩은 '원문 보기' 단추를 눌러야 그린다
@@ -1489,7 +1521,7 @@ window.__drawCharts = function(){
     var panel = document.getElementById(DOC_PANEL_OF[kind]);
     if (!panel || panel.hidden || kind === "scrap") return;
     var st = V3D.st[kind];
-    if (st.started || !V3D.rows[kind].length) return;
+    if (st.started || !V3D.rows[kind][st.sel]) return;
     v3DocStart(kind);
   }
   function v3DocStop(kind) {
@@ -1609,8 +1641,11 @@ window.__drawCharts = function(){
     var st = V3D.st[kind];
     if (t.hasAttribute("data-doc-sel")) {
       var i = parseInt(t.getAttribute("data-doc-sel"), 10);
-      if (!(i >= 0 && i < V3D.rows[kind].length) || i === st.sel) return;
-      st.sel = i;
+      if (!(i >= 0 && i < V3D.rows[kind].length)) return;
+      if (i === st.sel) {
+        if (kind !== "press") return;
+        st.sel = -1;   // 보도자료는 같은 항목을 다시 누르면 닫는다
+      } else st.sel = i;
       v3DocPaint(kind);
       v3DocActivate(kind);
     } else if (t.getAttribute("data-doc-act") === "view" && kind === "scrap") {
