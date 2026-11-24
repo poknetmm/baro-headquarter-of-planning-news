@@ -518,6 +518,19 @@ html.v3{font-size:calc(16px * var(--scale))}
 .v3-lh{display:flex;align-items:baseline;gap:8px;font-family:var(--v3-serif);font-weight:800;font-size:1.375rem;margin:28px 0 6px;padding-bottom:6px;border-bottom:2px solid var(--rule-strong)}
 .v3-lh .v3-pg{color:var(--accent)}
 .v3-lh small{font-family:var(--v3-sans);font-size:1rem;font-weight:500;color:var(--ink-2)}
+/* 기사요약 카드뉴스(2026-11-24) — 같은 폭·같은 높이로 줄 맞춤, 출처·전문은 카드 바닥에 붙인다 */
+.v3-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr));gap:16px;margin-top:8px}
+.v3-card{display:flex;flex-direction:column;min-width:0;background:var(--surface);border:1px solid var(--rule);border-top:4px solid var(--brand-navy);border-radius:8px;padding:18px 20px}
+.v3-card-sec{font-size:1rem;font-weight:700;color:var(--accent);margin-bottom:6px}
+.v3-card-tags .v3-tag{margin-bottom:4px}
+.v3-tag.v3-head{color:var(--accent-ink);background:var(--accent);border-color:var(--accent)}
+.v3-card h3{font-family:var(--v3-serif);font-weight:800;font-size:1.25rem;line-height:1.4;margin:4px 0 10px;overflow-wrap:anywhere}
+.v3-card-sum{margin:0 0 16px;color:var(--ink-2);line-height:1.65}
+.v3-card-foot{margin-top:auto;padding-top:14px;border-top:1px solid var(--rule);font-size:1rem;color:var(--ink-2)}
+.v3-card-src a{color:var(--ink-2);font-weight:700}
+.v3-card details{margin-top:8px}
+.v3-card details summary{cursor:pointer;font-weight:700;color:var(--accent);min-height:32px;display:flex;align-items:center}
+.v3-card details p{margin:8px 0 0;color:var(--ink);line-height:1.7}
 .v3-srclist{list-style:none;margin:0;padding:0}
 .v3-srclist li{display:grid;grid-template-columns:7.5rem 1fr auto;gap:16px;padding:12px 0;border-bottom:1px solid var(--rule);align-items:baseline}
 .v3-srclist b{color:var(--ink-2);min-width:0;overflow-wrap:anywhere}
@@ -1107,82 +1120,6 @@ window.__drawCharts = function(){
     if (!list || !list.length) return "";
     return '<p class="v3-src">출처: ' + list.map(function (s) { return v3A(s.url, esc(s.media)) + " " + esc(s.date || ""); }).join(" · ") + "</p>";
   }
-  function v3Art(key, label, kw, subs) {
-    var sub = (subs || []).length ? '<div class="v3-kws">' + subs.map(function (x) { return "<span>" + esc(x) + "</span>"; }).join("") + "</div>" : "";
-    return '<div class="v3-art">' + v3Icon(key, "v3-ic v3-big-ic") + '<div class="v3-k">' + esc(label || "") + '</div><div class="v3-v">' + esc(kw || "") + "</div>" + sub + "</div>";
-  }
-  function v3Tiles(items) {
-    return '<div class="v3-tiles">' + items.map(function (it) {
-      return '<div class="v3-tile">' + v3Icon("rate") + '<div class="v3-v">' + esc(it.display != null ? it.display : it.value) + '</div><div class="v3-n">' + esc(it.label || it.name || "") + (it.note ? " · " + esc(it.note) : "") + "</div></div>";
-    }).join("") + "</div>";
-  }
-  function v3Chart(c) {
-    if (!c || !c.items || !c.items.length) return "";
-    var head = '<div class="v3-boxhead">' + v3Icon("rate") + esc(c.title || "") + "</div>";
-    var body;
-    if (c.type === "tiles") { body = v3Tiles(c.items); }
-    else {
-      var max = Math.max.apply(null, c.items.map(function (it) { return Math.abs(Number(it.value) || 0); })) || 1;
-      body = '<div class="v3-bars">' + c.items.map(function (it) {
-        var pct = Math.max(2, Math.round(Math.abs(Number(it.value) || 0) / max * 100));
-        var tone = it.tone === "hi" ? " v3-hi" : it.tone === "bad" ? " v3-bad" : "";
-        return '<div class="v3-bar' + tone + '"><div class="v3-lab"><span>' + esc(it.label || "") + "</span><b>" + esc(it.display != null ? it.display : it.value) + "</b></div><div class=\"v3-track\"><div class=\"v3-fill\" style=\"width:" + pct + '%"></div></div></div>';
-      }).join("") + "</div>";
-    }
-    return '<div class="v3-chart">' + head + body + (c.caption ? '<div class="v3-cap">' + esc(c.caption) + "</div>" : "") + "</div>";
-  }
-  function v3IndicatorsBox(indicators, asSub) {
-    var head = '<div class="v3-boxhead">' + v3Icon("rate") + "금리 · 지표</div>";
-    var body = v3Tiles(indicators);
-    return asSub ? '<article class="v3-sub">' + head + body + "</article>" : '<div class="v3-chart">' + head + body + "</div>";
-  }
-  // chart가 없는 리드의 figures(단일 출처 수치 칸)를 금리 타일과 같은 모양으로 그린다(2026-10-15 대표 결정)
-  function v3FiguresBox(figures) {
-    var head = '<div class="v3-boxhead">' + v3Icon("rate") + "핵심 수치</div>";
-    var body = '<div class="v3-tiles">' + figures.map(function (f) {
-      return '<div class="v3-tile">' + v3Icon("rate") + '<div class="v3-v">' + esc(f.v) + (f.single_source ? '<span class="v3-ss">단일출처</span>' : "") + '</div><div class="v3-n">' + esc(f.n || "") + (f.c ? " · " + esc(f.c) : "") + "</div></div>";
-    }).join("") + "</div>";
-    return '<div class="v3-chart">' + head + body + "</div>";
-  }
-  function v3GovBox(gov, note) {
-    return '<article class="v3-sub"><h4>' + v3Icon("rate", "v3-ic") + " 당국 보도자료</h4><ul class=\"v3-gov\">" +
-      gov.map(function (g) { return '<li><span class="v3-d">' + esc(g.date || "") + "</span><span>" + v3A(g.url, esc(g.title)) + (g.org ? " · " + esc(g.org) : "") + "</span></li>"; }).join("") +
-      "</ul>" + (note ? '<p style="font-size:1rem;color:var(--ink-2);margin-top:8px">' + esc(note) + "</p>" : "") + "</article>";
-  }
-  function v3Paper(s) {
-    var head = '<div class="v3-sheet-head"><span class="v3-badge">' + v3Icon(s.key) + '</span><span class="v3-no">' + esc(s.no) + '면</span><span class="v3-nm">' + esc(s.name) + '</span><span class="v3-sc">' + esc(s.scope || "") + (!s.empty && s.count ? " · 기사 " + esc(s.count) + "건" : "") + "</span></div>";
-    if (s.empty) return '<section class="v3-sheet" id="v3-p-' + esc(s.key) + '">' + head + '<div style="padding:24px 0;color:var(--ink-2)">오늘 해당 없음 — 수집 기간 안에 이 지면에 실을 기사가 없었습니다.</div></section>';
-    var L = s.lead || {}, K = kwOf(L);
-    // 오른쪽 칸 우선순위: chart > figures(단일 출처 수치) > indicators(4면 금리 지표) > 없음(단일 열) — 2026-10-15 대표 결정
-    var hasChart = !!L.chart, hasFigs = !!(L.figures && L.figures.length), hasInd = !!((s.indicators || []).length);
-    var chartSlot = hasChart ? v3Chart(L.chart) : hasFigs ? v3FiguresBox(L.figures) : hasInd ? v3IndicatorsBox(s.indicators) : "";
-    var leadHtml = '<div class="v3-lead' + (chartSlot ? "" : " v3-nofig") + '"><article class="v3-story">' + v3Art(s.key, s.no + "면 · " + s.name, K.kw, K.sub) +
-      v3Tags(L.tag, L.warn, L.watch) + '<h3 id="v3-a-' + esc(s.key) + '_lead">' + esc(L.title || "") + "</h3>" +
-      (L.paras || []).map(function (p) { return "<p>" + rich(p) + "</p>"; }).join("") + v3SrcLine(L.sources) +
-      "</article>" + chartSlot + "</div>";
-    var subsHtml = (s.subs || []).map(function (x, i) {
-      return '<article class="v3-sub">' + v3Tags(x.tag, x.warn, x.watch) + '<h4 id="v3-a-' + esc(s.key) + "_s" + (i + 1) + '">' + esc(x.title) + "</h4>" +
-        (x.paras || []).map(function (p) { return "<p>" + rich(p) + "</p>"; }).join("") + v3SrcLine(x.sources) + "</article>";
-    });
-    if ((hasChart || hasFigs) && hasInd) subsHtml.push(v3IndicatorsBox(s.indicators, true));
-    if ((s.gov || []).length) subsHtml.push(v3GovBox(s.gov, s.gov_note));
-    return '<section class="v3-sheet" id="v3-p-' + esc(s.key) + '">' + head + leadHtml + (subsHtml.length ? '<div class="v3-subs">' + subsHtml.join("") + "</div>" : "") + "</section>";
-  }
-  function v3Front(b, F, secs) {
-    var story = F.story || {}, K = kwOf(story);
-    var secInfo = secs.filter(function (s) { return s.key === story.section; })[0];
-    var kicker = "머리기사" + (secInfo ? " · " + secInfo.no + "면 " + secInfo.name : "");
-    var top = '<div class="v3-top">' + v3Art(story.section || "security", (secInfo ? secInfo.name : "") + " · 머리기사", K.kw, K.sub) +
-      '<div class="v3-kicker">' + esc(kicker) + '</div><h1 id="v3-a-front">' + esc(story.title || "").replace(/\n/g, "<br>") + "</h1>" +
-      (story.paras || []).map(function (p) { return "<p>" + rich(p) + "</p>"; }).join("") + v3SrcLine(story.sources) + "</div>";
-    var keys = (F.keys || []).map(function (k) {
-      var sInfo = secs.filter(function (s) { return s.key === k.section; })[0];
-      var label = sInfo ? sInfo.no + "면 " + sInfo.name : "";
-      return '<li><span class="v3-pg">' + esc(label) + '</span><a href="#v3-p-' + esc(k.section) + '">' + esc(k.text) + "</a></li>";
-    }).join("");
-    var side = '<aside class="v3-side"><div class="v3-boxhead">' + v3Icon("front") + "오늘의 핵심</div><ol class=\"v3-keys\">" + keys + "</ol></aside>";
-    return '<section class="v3-front" id="v3-p-front">' + top + side + "</section>";
-  }
   function v3Marquee(secs) {
     var items = secs.filter(function (s) { return !s.empty && s.lead && s.lead.title; }).map(function (s) {
       return '<li><a href="#v3-p-' + esc(s.key) + '" data-jump="v3-p-' + esc(s.key) + '"><span class="v3-mp">' + esc(s.no) + "면 " + esc(s.name) + "</span>" + esc(s.lead.title) + "</a></li>";
@@ -1192,11 +1129,37 @@ window.__drawCharts = function(){
     return '<div class="v3-marq" role="region" aria-label="오늘의 헤드라인"><span class="v3-lab">오늘의 헤드라인</span><div class="v3-vp"><div class="v3-track"><ul>' + items + '</ul><ul aria-hidden="true">' + copy + "</ul></div></div>" +
       '<button type="button" class="v3-ctl" onclick="var m=this.closest(\'.v3-marq\');m.classList.toggle(\'v3-paused\');this.textContent=m.classList.contains(\'v3-paused\')?\'재생\':\'일시정지\'">일시정지</button></div>';
   }
-  function v3IndexNav(secs) {
-    var front = '<a href="#v3-p-front">' + v3Icon("front") + '<span><span class="v3-pg">1면</span> 오늘의 핵심</span></a>';
-    return '<nav class="v3-index">' + front + secs.map(function (s) {
-      return '<a href="#v3-p-' + esc(s.key) + '">' + v3Icon(s.key) + '<span><span class="v3-pg">' + esc(s.no) + "면</span> " + esc(s.name) + "</span></a>";
-    }).join("") + "</nav>";
+  // 기사요약 탭 — 카드뉴스(2026-11-24 대표 지시). 기사마다 첫 문단 앞 1~2문장만 요약으로 보이고, 전문은 '기사 전문'을 펼쳐 본다.
+  // 카드 id는 마퀴 링크(data-jump="v3-p-<지면>")가 그대로 찾아가도록 머리기사 v3-p-front, 각 지면 리드 v3-p-<key>로 둔다
+  function v3Gist(paras) {
+    var p = String((paras || [])[0] || "").trim();
+    var ss = p.match(/[^.?!]+[.?!]+(\s+|$)/g) || [p];
+    var out = ss[0].trim();
+    if (ss[1] && (out + " " + ss[1].trim()).length <= 160) out += " " + ss[1].trim();
+    return out;
+  }
+  function v3Card(a, secName, id, kind) {
+    var src = (a.sources || [])[0];
+    var tags = (kind ? '<span class="v3-tag v3-head">' + esc(kind) + "</span>" : "") + v3Tags(a.tag, a.warn, a.watch);
+    return '<article class="v3-card"' + (id ? ' id="' + esc(id) + '"' : "") + '><div class="v3-card-sec">' + esc(secName || "") + "</div>" +
+      (tags ? '<div class="v3-card-tags">' + tags + "</div>" : "") +
+      "<h3>" + esc(String(a.title || "").replace(/\n/g, " ")) + "</h3>" +
+      '<p class="v3-card-sum">' + rich(v3Gist(a.paras)) + "</p>" +
+      '<div class="v3-card-foot">' + (src ? '<span class="v3-card-src">' + v3A(src.url, esc(src.media)) + " " + esc(src.date || "") + "</span>" : "") +
+      ((a.paras || []).length ? '<details><summary>기사 전문</summary>' + a.paras.map(function (p) { return "<p>" + rich(p) + "</p>"; }).join("") + v3SrcLine(a.sources) + "</details>" : "") +
+      "</div></article>";
+  }
+  function v3Cards(F, secs) {
+    var nameOf = {};
+    secs.forEach(function (s) { nameOf[s.key] = s.name; });
+    var cards = [];
+    if (F && F.story && F.story.title) cards.push(v3Card(F.story, nameOf[F.story.section], "v3-p-front", "머리기사"));
+    secs.forEach(function (s) {
+      if (s.empty) return;
+      if (s.lead && s.lead.title) cards.push(v3Card(s.lead, s.name, "v3-p-" + s.key, ""));
+      (s.subs || []).forEach(function (x) { if (x.title) cards.push(v3Card(x, s.name, "", "")); });
+    });
+    return '<p class="v3-listnote">이번 호 기사 ' + cards.length + "건을 핵심만 요약했습니다. '기사 전문'을 누르면 본문이 펼쳐집니다.</p><div class=\"v3-cards\">" + cards.join("") + "</div>";
   }
   // 분야 이름은 표시하지 않는다(2026-10-01 대표 결정) — 논설/오늘의 요약 구분만
   function v3Editorial(ops) {
@@ -1241,15 +1204,13 @@ window.__drawCharts = function(){
     var list = v3RepSources(B);
     return '<p class="v3-listnote">이번 호 기사마다 대표 원문 1건씩, ' + list.length + "건입니다. 제목을 누르면 원문이 새 창으로 열립니다.</p>" + v3SrcGroupsHtml(list);
   }
+  // 면(1면·2면…) 구분 제목 없이 한 목록으로 보여 준다(2026-11-24 대표 지시). 순서는 종전처럼 면 순서를 따른다
   function v3SrcGroupsHtml(list) {
-    var byPage = {}, out = "";
-    list.forEach(function (s) { var p = s.page || "기타"; (byPage[p] = byPage[p] || []).push(s); });
-    Object.keys(byPage).sort().forEach(function (p) {
-      var items = byPage[p];
-      out += '<h3 class="v3-lh"><span class="v3-pg">' + esc(p) + "</span> <small>" + items.length + "건</small></h3><ul class=\"v3-srclist\">" +
-        items.map(function (s) { return '<li><b>' + esc(s.media) + '</b>' + v3A(s.url, esc(s.title)) + '<span class="v3-d">' + esc(s.date || "") + "</span></li>"; }).join("") + "</ul>";
+    var sorted = list.map(function (s, i) { return { s: s, i: i }; }).sort(function (a, b) {
+      var pa = a.s.page || "￿", pb = b.s.page || "￿";
+      return pa < pb ? -1 : pa > pb ? 1 : a.i - b.i;
     });
-    return out;
+    return '<ul class="v3-srclist">' + sorted.map(function (o) { var s = o.s; return '<li><b>' + esc(s.media) + '</b>' + v3A(s.url, esc(s.title)) + '<span class="v3-d">' + esc(s.date || "") + "</span></li>"; }).join("") + "</ul>";
   }
   // 지난 호 제목 수는 섹션의 count 필드(편집 당시 값, 어긋날 수 있음)가 아니라 실제로 받은 리드·서브 제목 수를 센다(개발실장 리뷰 경미4)
   function v3CountArticles(front, secs) {
@@ -1346,10 +1307,10 @@ window.__drawCharts = function(){
   }
   window.v3GoArchive = function () { window.v3ShowTab(document.querySelector('.v3-tabs button[data-panel="v3-t-arch"]')); };
   function v3TabButtons(secs, archN) {
-    // 탭 순서는 2026-10-27 대표 지시. 처음 열리는 탭도 맨 왼쪽 기사목록이다
-    var tabs = [["v3-t-src", "기사목록", null], ["v3-t-news", "기사요약", null],
+    // 탭 순서는 2026-10-27 대표 지시, 기사요약은 시장동향과 지난 기사목록 사이(2026-11-24 대표 지시). 처음 열리는 탭은 맨 왼쪽 기사목록이다
+    var tabs = [["v3-t-src", "기사목록", null],
       ["v3-t-press", "금융당국 보도자료", null], ["v3-t-scrap", "금융당국 신문스크랩", null], ["v3-t-mkt", "금융당국 시장동향", null],
-      ["v3-t-arch", "지난 기사목록", archN + "호"]];
+      ["v3-t-news", "기사요약", null], ["v3-t-arch", "지난 기사목록", archN + "호"]];
     return '<div class="v3-tabs" role="tablist">' + tabs.map(function (t) {
       return '<button type="button" role="tab" data-panel="' + t[0] + '" aria-selected="' + (t[0] === "v3-t-src" ? "true" : "false") + '" onclick="v3ShowTab(this)">' + t[1] + (t[2] ? "<small>" + esc(t[2]) + "</small>" : "") + "</button>";
     }).join("") + "</div>";
@@ -1663,7 +1624,7 @@ window.__drawCharts = function(){
     var ops = opinionList(B);
     window.__Q = q; window.__B = {};
     document.title = SITE_NAME + " · " + sdate(b.brief_date);
-    var news = '<div class="v3-panel" id="v3-t-news" role="tabpanel" hidden>' + v3IndexNav(secs) + v3Front(b, F, secs) + secs.map(v3Paper).join("") + v3Editorial(ops) + "</div>";
+    var news = '<div class="v3-panel" id="v3-t-news" role="tabpanel" hidden>' + v3Cards(F, secs) + v3Editorial(ops) + "</div>";
     var srcTab = '<div class="v3-panel" id="v3-t-src" role="tabpanel">' + v3SrcTab(B) + "</div>";
     var archTab = '<div class="v3-panel" id="v3-t-arch" role="tabpanel" hidden>' + v3ArchiveTab(archList, b) + "</div>";
     var foot = '<footer class="v3-foot"><span>기획본부 뉴스 · 사내 참고용이며 회사 공식 의견이 아닙니다.</span><span>편집 ' + esc(ed.edited_at || "") + "</span></footer>";
